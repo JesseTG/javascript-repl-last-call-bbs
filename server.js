@@ -1,32 +1,106 @@
+// The last key that was pressed
+let lastKey;
 
-/**
- * This function should return a string that will be used as the server's name. 
- * It must be short enough to fit in the NETronics Connect! menu.
- **/
+// The current line
+let keyBuffer = '';
+
+let scrollback = ["JavaScript REPL"];
+let history = [];
+
+// Similar to the Python convention
+let _ = null;
+
+// Config constants
+const SCROLLBACK_COLOR = 15;
+
+// Environment
+const SCREEN_HEIGHT = 20; // In characters
+const SCROLLBACK_HEIGHT = 18;
+const FIRST_PRINTABLE_CHARACTER = 32;
+
+const SPACE = 32; // First printable ASCII character
+
+const MAX_BUFFER_LENGTH = 49;
+
+// Control characters
+const BACKSPACE = 8;
+const TAB = 9;
+const ENTER = 10;
+const UP = 17;
+const DOWN = 18;
+const LEFT = 19;
+const RIGHT = 20;
+const ESCAPE = 27;
+const DEL = 127;
+
 function getName() {
-  return 'Server Name'
+    return 'REPL';
 }
 
-/** 
- * This function will be called when a user connects to the server. 
- **/
 function onConnect() {
-
+    // Reset the server variables when a new user connects:
+    lastKey = '';
 }
 
-/**
- * This function will be called approximately 30 times a
- * second while a user is connected to the server.
- **/
 function onUpdate() {
+    // It is safe to completely redraw the screen during every update:
+    clearScreen();
 
+    for (let i = 0; i < Math.min(scrollback.length, SCROLLBACK_HEIGHT); i++) {
+        drawText(sanitize(scrollback[i]), SCROLLBACK_COLOR, 0, i)
+    }
+    
+    drawText("> " + sanitize(keyBuffer) + "█", 17, 0, SCREEN_HEIGHT - 1);
 }
 
-
-/**
- * This function will be called every time the connected user presses a key. 
- * @param {number} key the ASCII representation of the key pressed
- **/
 function onInput(key) {
+    // Remember the last key pressed:
+    lastKey = key.toString();
 
+    switch (key) {
+        case BACKSPACE:
+            if (keyBuffer.length > 0) {
+                keyBuffer = keyBuffer.substring(0, keyBuffer.length - 1);
+            }
+            break;
+        case ENTER:
+            if (keyBuffer.length > 0) {
+
+                try {
+                    scrollback.push(keyBuffer);
+                    _ = eval(keyBuffer);
+                    scrollback.push((_ !== null && _ !== undefined) ? _.toString() : "");
+                }
+                catch (error) {
+                    scrollback.push(error.toString());
+                }
+            }
+            keyBuffer = '';
+            break;
+        case TAB:
+        case ESCAPE:
+        case DEL:
+            // noop
+            break;
+        default:
+            // Add text
+            if (key >= FIRST_PRINTABLE_CHARACTER && keyBuffer.length < MAX_BUFFER_LENGTH) {
+                keyBuffer = keyBuffer + String.fromCharCode(key);
+                saveData(keyBuffer);
+            }
+    }
+}
+
+// Some characters aren't printable, so I replace them with the most reasonable-looking substitute possible.
+function sanitize(input) {
+    input = input.replace(/=/g, "═");
+    input = input.replace(/\|/g, "║");
+    input = input.replace(/~/g, "™");
+    input = input.replace(/@/g, "☺");
+    input = input.replace(/\$/g, "♣");
+    input = input.replace(/_/g, "▄");
+    input = input.replace(/\{/g, "╣");
+    input = input.replace(/\}/g, "╠");
+
+    return input;
 }
