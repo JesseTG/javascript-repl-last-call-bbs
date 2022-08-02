@@ -46,8 +46,10 @@ function onUpdate() {
     // It is safe to completely redraw the screen during every update:
     clearScreen();
 
-    for (let i = 0; i < Math.min(scrollback.length, SCROLLBACK_HEIGHT); i++) {
-        drawText(sanitize(scrollback[i]), SCROLLBACK_COLOR, 0, i)
+    const displayHeight = Math.min(scrollback.length, SCROLLBACK_HEIGHT);
+    const unseenLines = Math.max(scrollback.length - SCROLLBACK_HEIGHT, 0);
+    for (let i = 0; i < displayHeight; i++) {
+        drawText(sanitize(scrollback[i + unseenLines]), SCROLLBACK_COLOR, 0, i)
     }
     
     drawText("> " + sanitize(keyBuffer) + "█", 17, 0, SCREEN_HEIGHT - 1);
@@ -69,7 +71,15 @@ function onInput(key) {
                 try {
                     scrollback.push(keyBuffer);
                     _ = eval(keyBuffer);
-                    scrollback.push((_ !== null && _ !== undefined) ? _.toString() : "");
+                    if (_ === null) {
+                        scrollback.push("null");
+                    }
+                    else if (_ === undefined) {
+                        scrollback.push("undefined");
+                    }
+                    else {
+                        scrollback.push(_.toString());
+                    }
                 }
                 catch (error) {
                     scrollback.push(error.toString());
