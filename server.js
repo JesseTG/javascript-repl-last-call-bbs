@@ -1,11 +1,8 @@
-
-// Similar to the Python convention
-let _ = null;
-
 // Config constants
 const SCROLLBACK_INPUT_COLOR = 10;
 const SCROLLBACK_OUTPUT_COLOR = 16;
 const SCROLLBACK_ERROR_COLOR = 8;
+const MAX_BUFFER_LENGTH = 49;
 
 // Environment
 const SCREEN_HEIGHT = 20; // In characters
@@ -13,8 +10,6 @@ const SCROLLBACK_HEIGHT = 19;
 const FIRST_PRINTABLE_CHARACTER = 32;
 
 const SPACE = 32; // First printable ASCII character
-
-const MAX_BUFFER_LENGTH = 49;
 
 // Control characters
 const BACKSPACE = 8;
@@ -27,12 +22,11 @@ const RIGHT = 20;
 const ESCAPE = 27;
 const DEL = 127;
 
-// The last key that was pressed
-let lastKey;
 
-// The current line
-let keyBuffer = '';
-
+// Global variables (blech)
+let lastKey; // The last key that was pressed
+let keyBuffer = ''; // The current line
+let _ = null; // Similar to the Python convention
 let scrollback = [{text: "JavaScript REPL", color: SCROLLBACK_OUTPUT_COLOR}];
 let history = [];
 
@@ -75,6 +69,7 @@ function onInput(key) {
 
                 try {
                     scrollback.push({text: keyBuffer, color: SCROLLBACK_INPUT_COLOR});
+                    history.push(keyBuffer);
                     _ = eval(keyBuffer);
                     if (_ === null) {
                         scrollback.push({text: "null", color: SCROLLBACK_OUTPUT_COLOR});
