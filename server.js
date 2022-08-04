@@ -5,6 +5,7 @@ const SCROLLBACK_ERROR_COLOR = 8;
 const MAX_BUFFER_LENGTH = 49;
 
 // Environment
+const SCREEN_WIDTH = 56;
 const SCREEN_HEIGHT = 20; // In characters
 const SCROLLBACK_HEIGHT = 19;
 const FIRST_PRINTABLE_CHARACTER = 32;
@@ -30,7 +31,7 @@ const Mode = {
 
 
 // Global variables (blech)
-let lastKey; // The last key that was pressed
+let lastKey = ''; // The last key that was pressed
 let keyBuffer = ''; // The current line
 let _ = null; // Similar to the Python convention
 let currentMode = Mode.EDIT;
@@ -44,22 +45,11 @@ function getName() {
 }
 
 function onConnect() {
-    // Reset the server variables when a new user connects:
-    lastKey = '';
+    render();
 }
 
 function onUpdate() {
-    // It is safe to completely redraw the screen during every update:
-    clearScreen();
 
-    const displayHeight = Math.min(scrollback.length, SCROLLBACK_HEIGHT);
-    const unseenLinesFromStart = Math.max(scrollback.length - SCROLLBACK_HEIGHT, 0);
-    for (let i = 0; i < displayHeight; i++) {
-        const entry = scrollback[i + unseenLinesFromStart - scrollOffsetFromEnd];
-        drawText(sanitize(entry.text), entry.color, 0, i)
-    }
-
-    drawText("> " + sanitize(keyBuffer) + "█", 17, 0, SCREEN_HEIGHT - 1);
 }
 
 function onInput(key) {
@@ -121,6 +111,8 @@ function onInput(key) {
                 keyBuffer = keyBuffer + String.fromCharCode(key);
             }
     }
+
+    render();
 }
 
 // Some characters aren't available in the display font,
@@ -149,3 +141,17 @@ function output(text, color) {
     }
 }
 
+function render() {
+
+    // It is safe to completely redraw the screen during every update:
+    clearScreen();
+
+    const displayHeight = Math.min(scrollback.length, SCROLLBACK_HEIGHT);
+    const unseenLinesFromStart = Math.max(scrollback.length - SCROLLBACK_HEIGHT, 0);
+    for (let i = 0; i < displayHeight; i++) {
+        const entry = scrollback[i + unseenLinesFromStart - scrollOffsetFromEnd];
+        drawText(sanitize(entry.text), entry.color, 0, i)
+    }
+
+    drawText("> " + sanitize(keyBuffer) + "█", 17, 0, SCREEN_HEIGHT - 1);
+}
