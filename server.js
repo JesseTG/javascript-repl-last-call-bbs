@@ -34,8 +34,9 @@ let lastKey; // The last key that was pressed
 let keyBuffer = ''; // The current line
 let _ = null; // Similar to the Python convention
 let currentMode = Mode.EDIT;
-let scrollback = [{text: "JavaScript REPL", color: SCROLLBACK_OUTPUT_COLOR}];
+let scrollback = [{ text: "JavaScript REPL", color: SCROLLBACK_OUTPUT_COLOR }];
 let history = [];
+let scrollOffsetFromEnd = 0;
 
 
 function getName() {
@@ -52,12 +53,12 @@ function onUpdate() {
     clearScreen();
 
     const displayHeight = Math.min(scrollback.length, SCROLLBACK_HEIGHT);
-    const unseenLines = Math.max(scrollback.length - SCROLLBACK_HEIGHT, 0);
+    const unseenLinesFromStart = Math.max(scrollback.length - SCROLLBACK_HEIGHT, 0);
     for (let i = 0; i < displayHeight; i++) {
-        const entry = scrollback[i + unseenLines];
+        const entry = scrollback[i + unseenLinesFromStart - scrollOffsetFromEnd];
         drawText(sanitize(entry.text), entry.color, 0, i)
     }
-    
+
     drawText("> " + sanitize(keyBuffer) + "█", 17, 0, SCREEN_HEIGHT - 1);
 }
 
@@ -75,30 +76,44 @@ function onInput(key) {
             if (keyBuffer.length > 0) {
 
                 try {
-                    scrollback.push({text: keyBuffer, color: SCROLLBACK_INPUT_COLOR});
+                    scrollback.push({ text: keyBuffer, color: SCROLLBACK_INPUT_COLOR });
                     history.push(keyBuffer);
                     _ = eval(keyBuffer);
                     if (_ === null) {
-                        scrollback.push({text: "null", color: SCROLLBACK_OUTPUT_COLOR});
+                        scrollback.push({ text: "null", color: SCROLLBACK_OUTPUT_COLOR });
                     }
                     else if (_ === undefined) {
-                        scrollback.push({text: "undefined", color: SCROLLBACK_OUTPUT_COLOR});
+                        scrollback.push({ text: "undefined", color: SCROLLBACK_OUTPUT_COLOR });
                     }
                     else {
-                        scrollback.push({text: _.toString(), color: SCROLLBACK_OUTPUT_COLOR});
+                        scrollback.push({ text: _.toString(), color: SCROLLBACK_OUTPUT_COLOR });
                     }
                 }
                 catch (error) {
-                    scrollback.push({text: error.toString(), color: SCROLLBACK_ERROR_COLOR});
+                    scrollback.push({ text: error.toString(), color: SCROLLBACK_ERROR_COLOR });
                 }
             }
             keyBuffer = '';
+            scrollOffsetFromEnd = 0;
             break;
         case TAB:
         case ESCAPE:
         case DEL:
             // noop
             break;
+        case UP: {
+            const unseenLinesFromStart = Math.max(scrollback.length - SCROLLBACK_HEIGHT, 0);
+            if (scrollOffsetFromEnd < unseenLinesFromStart) {
+                scrollOffsetFromEnd += 1;
+            }
+            break;
+        }
+        case DOWN: {
+            if (scrollOffsetFromEnd > 0) {
+                scrollOffsetFromEnd -= 1;
+            }
+        }
+
         default:
             // Add text
             if (key >= FIRST_PRINTABLE_CHARACTER && keyBuffer.length < MAX_BUFFER_LENGTH) {
