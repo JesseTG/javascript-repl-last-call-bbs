@@ -122,7 +122,8 @@ function onInput(key) {
     }
 }
 
-// Some characters aren't printable, so I replace them with the most reasonable-looking substitute possible.
+// Some characters aren't available in the display font,
+// so I replace them with reasonable-looking substitutes.
 function sanitize(input) {
     input = input.replace(/=/g, "═");
     input = input.replace(/\|/g, "║");
