@@ -22,11 +22,18 @@ const RIGHT = 20;
 const ESCAPE = 27;
 const DEL = 127;
 
+const Mode = {
+    EDIT: 0,
+    SCROLL: 1,
+};
+
+
 
 // Global variables (blech)
 let lastKey; // The last key that was pressed
 let keyBuffer = ''; // The current line
 let _ = null; // Similar to the Python convention
+let currentMode = Mode.EDIT;
 let scrollback = [{text: "JavaScript REPL", color: SCROLLBACK_OUTPUT_COLOR}];
 let history = [];
 
