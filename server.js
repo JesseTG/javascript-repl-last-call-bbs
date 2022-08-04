@@ -86,11 +86,12 @@ function onInput(key) {
                         scrollback.push({ text: "undefined", color: SCROLLBACK_OUTPUT_COLOR });
                     }
                     else {
-                        scrollback.push({ text: _.toString(), color: SCROLLBACK_OUTPUT_COLOR });
+                        const result = _.toString();
+                        output(result, SCROLLBACK_OUTPUT_COLOR);
                     }
                 }
                 catch (error) {
-                    scrollback.push({ text: error.toString(), color: SCROLLBACK_ERROR_COLOR });
+                    output(error.toString(), SCROLLBACK_ERROR_COLOR);
                 }
             }
             keyBuffer = '';
@@ -136,3 +137,15 @@ function sanitize(input) {
 
     return input;
 }
+
+// Output text, wrapping it across multiple lines if necessary
+function output(text, color) {
+    const result = text.toString();
+
+    for (let s = 0; s < (result.length / SCREEN_WIDTH); s++) { // Break the output into chunks the size of the screen's width
+        const segment = result.slice(s * SCREEN_WIDTH, (s + 1) * SCREEN_WIDTH);
+
+        scrollback.push({ text: segment, color: color });
+    }
+}
+
